@@ -8,7 +8,7 @@ import {
   Modal,
   TextField,
 } from "@mui/material";
-import { Firestore, getDocs, query } from "firebase/firestore";
+import { Firestore, doc, getDocs, query, setDoc } from "firebase/firestore";
 import { collection } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { firestore } from "../../firebase";
@@ -33,19 +33,26 @@ export default function Home() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const updatePantry = async () => {
+    const snapshot = query(collection(firestore, "pantry"));
+    const docs = getDocs(snapshot);
+    const pantryList = [];
+    (await docs).forEach((doc) => {
+      pantryList.push(doc.id);
+      setPantry(pantryList);
+    });
+    console.log(pantryList);
+  };
+
   useEffect(() => {
-    const updatePantry = async () => {
-      const snapshot = query(collection(firestore, "pantry"));
-      const docs = getDocs(snapshot);
-      const pantryList = [];
-      (await docs).forEach((doc) => {
-        pantryList.push(doc.id);
-        setPantry(pantryList);
-      });
-      console.log(pantryList);
-    };
     updatePantry();
   }, []);
+
+  const addItem = async (item) => {
+    const docRef = doc(collection(firestore, "pantry"), item);
+    await setDoc(docRef, {});
+    updatePantry();
+  };
   return (
     <Box
       gap={2}
@@ -71,9 +78,20 @@ export default function Home() {
               id="outlined-basic"
               label="Item"
               variant="outlined"
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
               fullWidth
             />
-            <Button variant="contained">Add</Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                addItem(itemName);
+                setItemName("");
+                handleClose();
+              }}
+            >
+              Add
+            </Button>
           </Stack>
         </Box>
       </Modal>
