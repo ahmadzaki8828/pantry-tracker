@@ -8,7 +8,14 @@ import {
   Modal,
   TextField,
 } from "@mui/material";
-import { Firestore, doc, getDocs, query, setDoc } from "firebase/firestore";
+import {
+  Firestore,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import { collection } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { firestore } from "../../firebase";
@@ -51,8 +58,15 @@ export default function Home() {
   const addItem = async (item) => {
     const docRef = doc(collection(firestore, "pantry"), item);
     await setDoc(docRef, {});
-    updatePantry();
+    await updatePantry();
   };
+
+  const removeItem = async (item) => {
+    const docRef = doc(collection(firestore, "pantry"), item);
+    await deleteDoc(docRef);
+    await updatePantry();
+  };
+
   return (
     <Box
       gap={2}
@@ -108,12 +122,20 @@ export default function Home() {
           {pantry.map((i) => (
             <Box
               key={i}
+              width={"100%"}
               minHeight={"100px"}
-              className="flex items-center justify-center relative h-screen bg-[#f0f0f0]"
+              display={"flex"}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+              padding={2}
+              bgcolor={"#f0f0f0"}
             >
               <Typography variant={"h5"} className="text-[#333] text-center">
                 {i.charAt(0).toUpperCase() + i.slice(1)}
               </Typography>
+              <Button variant="contained" onClick={() => removeItem(i)}>
+                Remove
+              </Button>
             </Box>
           ))}
         </Stack>
