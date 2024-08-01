@@ -11,6 +11,7 @@ import {
 import {
   Firestore,
   doc,
+  getDoc,
   getDocs,
   query,
   setDoc,
@@ -46,10 +47,10 @@ export default function Home() {
     const docs = await getDocs(snapshot);
     const pantryList = [];
     docs.forEach((doc) => {
-      pantryList.push(doc.id);
+      pantryList.push({ name: doc.id, ...doc.data() });
     });
-    setPantry(pantryList);
     console.log(pantryList);
+    setPantry(pantryList);
   };
 
   useEffect(() => {
@@ -58,13 +59,26 @@ export default function Home() {
 
   const addItem = async (item) => {
     const docRef = doc(collection(firestore, "pantry"), item);
-    await setDoc(docRef, { count: 1 });
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const { count } = docSnap.data();
+      await setDoc(docRef, { count: count + 1 });
+      await updatePantry();
+    } else {
+      await setDoc(docRef, { count: 1 });
+    }
     await updatePantry();
   };
 
   const removeItem = async (item) => {
     const docRef = doc(collection(firestore, "pantry"), item);
-    await deleteDoc(docRef);
+    const docSnap = await getDoc(docRef);
+    const { count } = docSnap.data();
+    if (count === 1) {
+      await deleteDoc(docRef);
+    } else {
+      await setDoc(docRef, { count: count - 1 });
+    }
     await updatePantry();
   };
 
@@ -120,9 +134,9 @@ export default function Home() {
           </Typography>
         </Box>
         <Stack width="800px" height="200px" spacing={2} overflow={"auto"}>
-          {pantry.map((i) => (
+          {pantry.map(({ name, count }) => (
             <Box
-              key={i}
+              key={name}
               width={"100%"}
               minHeight={"100px"}
               display={"flex"}
@@ -132,9 +146,12 @@ export default function Home() {
               bgcolor={"#f0f0f0"}
             >
               <Typography variant={"h5"} className="text-[#333] text-center">
-                {i.charAt(0).toUpperCase() + i.slice(1)}
+                {name.charAt(0).toUpperCase() + name.slice(1)}
               </Typography>
-              <Button variant="contained" onClick={() => removeItem(i)}>
+              <Typography variant={"h5"} className="text-[#333] text-center">
+                Quantity: {count}
+              </Typography>
+              <Button variant="contained" onClick={() => removeItem(name)}>
                 Remove
               </Button>
             </Box>
