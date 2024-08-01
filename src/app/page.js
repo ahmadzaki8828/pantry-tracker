@@ -15,6 +15,7 @@ import {
   query,
   setDoc,
   deleteDoc,
+  count,
 } from "firebase/firestore";
 import { collection } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -42,12 +43,12 @@ export default function Home() {
 
   const updatePantry = async () => {
     const snapshot = query(collection(firestore, "pantry"));
-    const docs = getDocs(snapshot);
+    const docs = await getDocs(snapshot);
     const pantryList = [];
-    (await docs).forEach((doc) => {
+    docs.forEach((doc) => {
       pantryList.push(doc.id);
-      setPantry(pantryList);
     });
+    setPantry(pantryList);
     console.log(pantryList);
   };
 
@@ -57,7 +58,7 @@ export default function Home() {
 
   const addItem = async (item) => {
     const docRef = doc(collection(firestore, "pantry"), item);
-    await setDoc(docRef, {});
+    await setDoc(docRef, { count: 1 });
     await updatePantry();
   };
 
