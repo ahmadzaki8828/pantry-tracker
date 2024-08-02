@@ -135,6 +135,18 @@ export default function Home() {
     await updatePantry();
   };
 
+  const decreaseQuantity = async (item) => {
+    const docRef = doc(collection(firestore, "pantry"), item);
+    const docSnap = await getDoc(docRef);
+    const { count } = docSnap.data();
+    if (count === 1) {
+      return;
+    } else {
+      await setDoc(docRef, { count: count - 1 });
+    }
+    await updatePantry();
+  };
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -288,7 +300,7 @@ export default function Home() {
                     <IconButton
                       size="small"
                       color="secondary"
-                      onClick={() => removeItem(name)}
+                      onClick={() => decreaseQuantity(name)}
                     >
                       <KeyboardArrowDownIcon fontSize="small" />
                     </IconButton>
