@@ -28,6 +28,8 @@ import { firestore } from "../../firebase";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import SearchIcon from "@mui/icons-material/Search";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 const drawerWidth = 240;
 
@@ -89,7 +91,7 @@ export default function Home() {
   const [pantry, setPantry] = useState([]);
   const [itemName, setItemName] = useState("");
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
+  const [searchQuery, setSearchQuery] = useState("");
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -156,7 +158,7 @@ export default function Home() {
               <SearchIcon />
             </SearchIconWrapper>
             <StyledInputBase
-              placeholder="Search"
+              placeholder="Search…"
               inputProps={{ "aria-label": "search" }}
               value={searchQuery}
               onChange={handleSearchChange}
@@ -267,9 +269,31 @@ export default function Home() {
                 <Typography variant="h6" sx={{ flex: 1 }}>
                   {name.charAt(0).toUpperCase() + name.slice(1)}
                 </Typography>
-                <Typography variant="h6" sx={{ flex: 1, textAlign: "center" }}>
-                  Quantity: {count}
-                </Typography>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  sx={{ flex: 1, textAlign: "center" }}
+                >
+                  <Typography variant="h6" sx={{ mx: 1 }}>
+                    Quantity: {count}
+                  </Typography>
+                  <Stack direction="column" spacing={0} alignItems="center">
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => addItem(name)}
+                    >
+                      <KeyboardArrowUpIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="secondary"
+                      onClick={() => removeItem(name)}
+                    >
+                      <KeyboardArrowDownIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                </Box>
                 <IconButton
                   color="secondary"
                   onClick={() => removeItem(name)}
