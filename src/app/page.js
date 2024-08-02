@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Box,
   Stack,
@@ -15,7 +16,7 @@ import {
 } from "@mui/material";
 import { styled, alpha } from "@mui/material/styles";
 import {
-  Firestore,
+  collection,
   doc,
   getDoc,
   getDocs,
@@ -23,8 +24,6 @@ import {
   setDoc,
   deleteDoc,
 } from "firebase/firestore";
-import { collection } from "firebase/firestore";
-import { useEffect, useState } from "react";
 import { firestore } from "../../firebase";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -90,6 +89,7 @@ export default function Home() {
   const [pantry, setPantry] = useState([]);
   const [itemName, setItemName] = useState("");
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -133,6 +133,14 @@ export default function Home() {
     await updatePantry();
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const filteredPantry = pantry.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar
@@ -148,8 +156,10 @@ export default function Home() {
               <SearchIcon />
             </SearchIconWrapper>
             <StyledInputBase
-              placeholder="Search…"
+              placeholder="Search"
               inputProps={{ "aria-label": "search" }}
+              value={searchQuery}
+              onChange={handleSearchChange}
             />
           </Search>
         </Toolbar>
@@ -230,6 +240,8 @@ export default function Home() {
             boxShadow: 3,
             overflow: "hidden",
             mt: 2,
+            maxHeight: "88vh",
+            overflowY: "auto",
           }}
         >
           <Box
@@ -242,8 +254,8 @@ export default function Home() {
           >
             <Typography variant="h4">Pantry Items</Typography>
           </Box>
-          <Stack spacing={2} sx={{ p: 2, maxHeight: 500, overflowY: "auto" }}>
-            {pantry.map(({ name, count }) => (
+          <Stack spacing={2} sx={{ p: 2, overflowY: "auto" }}>
+            {filteredPantry.map(({ name, count }) => (
               <Box
                 key={name}
                 display="flex"
@@ -252,11 +264,17 @@ export default function Home() {
                 p={2}
                 sx={{ bgcolor: "grey.100", borderRadius: 1, boxShadow: 1 }}
               >
-                <Typography variant="h6">
+                <Typography variant="h6" sx={{ flex: 1 }}>
                   {name.charAt(0).toUpperCase() + name.slice(1)}
                 </Typography>
-                <Typography variant="h6">Quantity: {count}</Typography>
-                <IconButton color="secondary" onClick={() => removeItem(name)}>
+                <Typography variant="h6" sx={{ flex: 1, textAlign: "center" }}>
+                  Quantity: {count}
+                </Typography>
+                <IconButton
+                  color="secondary"
+                  onClick={() => removeItem(name)}
+                  sx={{ flex: 1, textAlign: "right" }}
+                >
                   <DeleteIcon />
                 </IconButton>
               </Box>
