@@ -7,7 +7,13 @@ import {
   Button,
   Modal,
   TextField,
+  IconButton,
+  Drawer,
+  AppBar,
+  Toolbar,
+  InputBase,
 } from "@mui/material";
+import { styled, alpha } from "@mui/material/styles";
 import {
   Firestore,
   doc,
@@ -16,11 +22,15 @@ import {
   query,
   setDoc,
   deleteDoc,
-  count,
 } from "firebase/firestore";
 import { collection } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { firestore } from "../../firebase";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import SearchIcon from "@mui/icons-material/Search";
+
+const drawerWidth = 240;
 
 const style = {
   position: "absolute",
@@ -29,11 +39,52 @@ const style = {
   transform: "translate(-50%, -50%)",
   width: 400,
   bgcolor: "background.paper",
-  border: "2px solid #000",
+  borderRadius: 2,
   boxShadow: 24,
   p: 4,
-  gap: 3,
 };
+
+const Search = styled("div")(({ theme }) => ({
+  position: "relative",
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.common.white, 0.25),
+  },
+  marginRight: theme.spacing(2),
+  marginLeft: 0,
+  width: "100%",
+  [theme.breakpoints.up("sm")]: {
+    marginLeft: theme.spacing(3),
+    width: "auto",
+  },
+}));
+
+const SearchIconWrapper = styled("div")(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: "100%",
+  position: "absolute",
+  pointerEvents: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: "inherit",
+  "& .MuiInputBase-input": {
+    padding: theme.spacing(1, 1, 1, 0),
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create("width"),
+    width: "100%",
+    [theme.breakpoints.up("sm")]: {
+      width: "12ch",
+      "&:focus": {
+        width: "20ch",
+      },
+    },
+  },
+}));
 
 export default function Home() {
   const [pantry, setPantry] = useState([]);
@@ -49,7 +100,6 @@ export default function Home() {
     docs.forEach((doc) => {
       pantryList.push({ name: doc.id, ...doc.data() });
     });
-    console.log(pantryList);
     setPantry(pantryList);
   };
 
@@ -63,11 +113,12 @@ export default function Home() {
     if (docSnap.exists()) {
       const { count } = docSnap.data();
       await setDoc(docRef, { count: count + 1 });
-      await updatePantry();
     } else {
       await setDoc(docRef, { count: 1 });
     }
     await updatePantry();
+    handleClose();
+    setItemName("");
   };
 
   const removeItem = async (item) => {
@@ -83,80 +134,135 @@ export default function Home() {
   };
 
   return (
-    <Box
-      gap={2}
-      className="flex flex-col items-center justify-center relative h-screen"
-    >
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+    <Box sx={{ display: "flex" }}>
+      <AppBar
+        position="fixed"
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
-        <Box sx={style}>
-          <Typography
-            className="pb-3 text-center"
-            id="modal-modal-title"
-            variant="h6"
-            component="h2"
-          >
-            Add Item
+        <Toolbar>
+          <Typography variant="h6" noWrap component="div">
+            Pantry Tracker
           </Typography>
-          <Stack width={"100%"} direction={"row"} spacing={2}>
-            <TextField
-              id="outlined-basic"
-              label="Item"
-              variant="outlined"
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-              fullWidth
+          <Search>
+            <SearchIconWrapper>
+              <SearchIcon />
+            </SearchIconWrapper>
+            <StyledInputBase
+              placeholder="Search…"
+              inputProps={{ "aria-label": "search" }}
             />
+          </Search>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+          },
+        }}
+        variant="permanent"
+        anchor="left"
+      >
+        <Toolbar />
+        <Box sx={{ overflow: "auto" }}>
+          <Stack spacing={2} sx={{ p: 2 }}>
             <Button
+              onClick={handleOpen}
               variant="contained"
-              onClick={() => {
-                addItem(itemName);
-                setItemName("");
-                handleClose();
-              }}
+              startIcon={<AddCircleIcon />}
             >
-              Add
+              Add Item
             </Button>
           </Stack>
         </Box>
-      </Modal>
-      <Button onClick={handleOpen} variant="contained">
-        Add Item
-      </Button>
-      <Box className="border border-solid border-black ">
-        <Box width={"800px"} height={"100px"} className="bg-[#ADD8E6]">
-          <Typography variant={"h2"} className="text-[#333] text-center">
-            Pantry Items
-          </Typography>
-        </Box>
-        <Stack width="800px" height="200px" spacing={2} overflow={"auto"}>
-          {pantry.map(({ name, count }) => (
-            <Box
-              key={name}
-              width={"100%"}
-              minHeight={"100px"}
-              display={"flex"}
-              justifyContent={"space-between"}
-              alignItems={"center"}
-              padding={2}
-              bgcolor={"#f0f0f0"}
+      </Drawer>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          bgcolor: "background.default",
+          p: 3,
+          pt: 8,
+          minHeight: "100vh",
+          backgroundImage: "url(https://source.unsplash.com/random/?pantry)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box sx={style}>
+            <Typography
+              className="pb-3 text-center"
+              id="modal-modal-title"
+              variant="h6"
+              component="h2"
             >
-              <Typography variant={"h5"} className="text-[#333] text-center">
-                {name.charAt(0).toUpperCase() + name.slice(1)}
-              </Typography>
-              <Typography variant={"h5"} className="text-[#333] text-center">
-                Quantity: {count}
-              </Typography>
-              <Button variant="contained" onClick={() => removeItem(name)}>
-                Remove
+              Add Item
+            </Typography>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Item"
+                variant="outlined"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                fullWidth
+              />
+              <Button variant="contained" onClick={() => addItem(itemName)}>
+                Add
               </Button>
-            </Box>
-          ))}
-        </Stack>
+            </Stack>
+          </Box>
+        </Modal>
+
+        <Box
+          sx={{
+            width: "100%",
+            bgcolor: "white",
+            borderRadius: 2,
+            boxShadow: 3,
+            overflow: "hidden",
+            mt: 2,
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: "#1976d2",
+              color: "white",
+              py: 2,
+              textAlign: "center",
+            }}
+          >
+            <Typography variant="h4">Pantry Items</Typography>
+          </Box>
+          <Stack spacing={2} sx={{ p: 2, maxHeight: 500, overflowY: "auto" }}>
+            {pantry.map(({ name, count }) => (
+              <Box
+                key={name}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                p={2}
+                sx={{ bgcolor: "grey.100", borderRadius: 1, boxShadow: 1 }}
+              >
+                <Typography variant="h6">
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
+                </Typography>
+                <Typography variant="h6">Quantity: {count}</Typography>
+                <IconButton color="secondary" onClick={() => removeItem(name)}>
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
       </Box>
     </Box>
   );
