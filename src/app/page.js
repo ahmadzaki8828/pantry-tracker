@@ -30,6 +30,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import SearchIcon from "@mui/icons-material/Search";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import OpenAI from "openai";
 
 const drawerWidth = 240;
 
@@ -38,11 +39,15 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
+  width: "80vh",
   bgcolor: "background.paper",
   borderRadius: 2,
   boxShadow: 24,
   p: 4,
+  display: "flex",
+  flexDirection: "column",
+  maxHeight: "85vh",
+  overflowY: "auto",
 };
 
 const Search = styled("div")(({ theme }) => ({
@@ -91,9 +96,14 @@ export default function Home() {
   const [pantry, setPantry] = useState([]);
   const [itemName, setItemName] = useState("");
   const [open, setOpen] = useState(false);
+  const [recipeOpen, setRecipeOpen] = useState(false);
+  const [recipe, setRecipe] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const handleRecipeOpen = () => setRecipeOpen(true);
+  const handleRecipeClose = () => setRecipeOpen(false);
 
   const updatePantry = async () => {
     const snapshot = query(collection(firestore, "pantry"));
@@ -149,6 +159,25 @@ export default function Home() {
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const suggestRecipe = async () => {
+    const openai = new OpenAI({
+      apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+      dangerouslyAllowBrowser: true,
+    });
+
+    const pantryItems = pantry.map((item) => item.name).join(", ");
+
+    const prompt = `Suggest a recipe using the following items from my pantry: ${pantryItems}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "system", content: prompt }],
+    });
+
+    setRecipe(response.choices[0].message.content);
+    handleRecipeOpen();
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar
@@ -194,6 +223,13 @@ export default function Home() {
             >
               Add Item
             </Button>
+            <Button
+              onClick={suggestRecipe}
+              variant="contained"
+              color="secondary"
+            >
+              Suggest Recipe
+            </Button>
           </Stack>
         </Box>
       </Drawer>
@@ -237,6 +273,45 @@ export default function Home() {
                 Add
               </Button>
             </Stack>
+          </Box>
+        </Modal>
+        <Modal
+          open={recipeOpen}
+          onClose={handleRecipeClose}
+          aria-labelledby="modal-recipe-title"
+          aria-describedby="modal-recipe-description"
+        >
+          <Box sx={style}>
+            <Typography
+              className="pb-3 text-center"
+              id="modal-recipe-title"
+              variant="h6"
+              component="h2"
+            >
+              Suggested Recipe
+            </Typography>
+            <Box
+              sx={{
+                maxHeight: "60vh",
+                overflowY: "auto",
+                mt: 2,
+              }}
+            >
+              <Typography
+                id="modal-recipe-description"
+                variant="body1"
+                component="p"
+              >
+                {recipe}
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              onClick={handleRecipeClose}
+              sx={{ mt: 2 }}
+            >
+              Close
+            </Button>
           </Box>
         </Modal>
 
