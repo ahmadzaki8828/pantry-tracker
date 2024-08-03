@@ -46,7 +46,7 @@ const style = {
   p: 4,
   display: "flex",
   flexDirection: "column",
-  maxHeight: "85vh",
+  maxHeight: "80vh",
   overflowY: "auto",
 };
 
@@ -97,6 +97,7 @@ export default function Home() {
   const [itemName, setItemName] = useState("");
   const [open, setOpen] = useState(false);
   const [recipeOpen, setRecipeOpen] = useState(false);
+  const [removeAllOpen, setRemoveAllOpen] = useState(false);
   const [recipe, setRecipe] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -104,6 +105,8 @@ export default function Home() {
   const handleClose = () => setOpen(false);
   const handleRecipeOpen = () => setRecipeOpen(true);
   const handleRecipeClose = () => setRecipeOpen(false);
+  const handleRemoveAllOpen = () => setRemoveAllOpen(true);
+  const handleRemoveAllClose = () => setRemoveAllOpen(false);
 
   const updatePantry = async () => {
     const snapshot = query(collection(firestore, "pantry"));
@@ -178,6 +181,16 @@ export default function Home() {
     handleRecipeOpen();
   };
 
+  const removeAllItems = async () => {
+    const snapshot = query(collection(firestore, "pantry"));
+    const docs = await getDocs(snapshot);
+    docs.forEach(async (doc) => {
+      await deleteDoc(doc.ref);
+    });
+    await updatePantry();
+    handleRemoveAllClose();
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar
@@ -222,6 +235,13 @@ export default function Home() {
               startIcon={<AddCircleIcon />}
             >
               Add Item
+            </Button>
+            <Button
+              onClick={handleRemoveAllOpen}
+              variant="contained"
+              color="error"
+            >
+              Remove All Items
             </Button>
             <Button
               onClick={suggestRecipe}
@@ -314,7 +334,42 @@ export default function Home() {
             </Button>
           </Box>
         </Modal>
-
+        <Modal
+          open={removeAllOpen}
+          onClose={handleRemoveAllClose}
+          aria-labelledby="modal-remove-all-title"
+          aria-describedby="modal-remove-all-description"
+        >
+          <Box sx={style}>
+            <Typography
+              className="pb-3 text-center"
+              id="modal-remove-all-title"
+              variant="h6"
+              component="h2"
+            >
+              Confirm Removal
+            </Typography>
+            <Typography
+              id="modal-remove-all-description"
+              variant="body1"
+              component="p"
+            >
+              Are you sure you want to remove all items from the pantry?
+            </Typography>
+            <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={removeAllItems}
+              >
+                Yes, Remove All
+              </Button>
+              <Button variant="contained" onClick={handleRemoveAllClose}>
+                Cancel
+              </Button>
+            </Stack>
+          </Box>
+        </Modal>
         <Box
           sx={{
             width: "100%",
