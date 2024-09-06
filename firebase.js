@@ -9,12 +9,11 @@ import { getAnalytics } from "firebase/analytics";
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: "pantry-tracker-100e3.firebaseapp.com",
-  projectId: "pantry-tracker-100e3",
-  storageBucket: "pantry-tracker-100e3.appspot.com",
-  messagingSenderId: "376856515266",
-  appId: "1:376856515266:web:089de1a142f84af15be15b",
-  measurementId: "G-BCCXZTR1ZD",
+  authDomain: "pantry-83ffe.firebaseapp.com",
+  projectId: "pantry-83ffe",
+  storageBucket: "pantry-83ffe.appspot.com",
+  messagingSenderId: "715007118737",
+  appId: "1:715007118737:web:a2e90b256aad6212789e30",
 };
 
 // Initialize Firebase
